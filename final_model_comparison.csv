@@ -1,0 +1,7 @@
+Dataset,Model,Accuracy,F1_Score
+NSL-KDD,Logistic Regression,0.8948,0.8837
+NSL-KDD,Random Forest,0.9996,0.9995
+UNSW-NB15,SVM,0.91,0.9
+UNSW-NB15,Random Forest,0.95,0.94
+Class0,KNN,0.94,0.94
+Class0,Decision Tree,0.97,0.97
