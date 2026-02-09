@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-
+from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import KNeighborsClassifier
@@ -13,7 +13,7 @@ print("DATASET 3: Class0 – Classification (Differentiated Models)")
 # -----------------------------
 # STEP 1: Load dataset
 # -----------------------------
-df = pd.read_excel("Class0.xlsx")
+df = pd.read_excel("../Class0.xlsx")
 print("\nDataset Shape:", df.shape)
 
 # -----------------------------
@@ -83,26 +83,52 @@ Xk_train = scaler.fit_transform(Xk_train)
 Xk_test = scaler.transform(Xk_test)
 
 # -----------------------------
-# MODEL 1: KNN
+# MODEL 1: KNN (Hyperparameter Tuning)
 # -----------------------------
-knn = KNeighborsClassifier(
-    n_neighbors=17,
-    metric="manhattan",
-    weights="uniform"
+knn_params = {
+   "n_neighbors": [9, 11, 13, 15],
+   "weights": ["uniform"],
+   "metric": ["euclidean"]
+}
+knn_grid = GridSearchCV(
+   KNeighborsClassifier(),
+   knn_params,
+   cv=5,
+   scoring="accuracy",
+   n_jobs=-1
 )
-knn.fit(Xk_train, y_train)
+knn_grid.fit(Xk_train, y_train)
+
+print("\nBest KNN Parameters:", knn_grid.best_params_)
+
+knn = knn_grid.best_estimator_
 knn_pred = knn.predict(Xk_test)
 
+
 # -----------------------------
-# MODEL 2: Decision Tree
+# MODEL 2: Decision Tree (Hyperparameter Tuning)
 # -----------------------------
-dt = DecisionTreeClassifier(
-    max_depth=4,
-    min_samples_leaf=4,
-    random_state=42
+dt_params = {
+    "max_depth": [3, 4, 6, 8, None],
+    "min_samples_leaf": [1, 2, 4, 6],
+    "criterion": ["gini", "entropy"]
+}
+
+dt_grid = GridSearchCV(
+    DecisionTreeClassifier(random_state=42),
+    dt_params,
+    cv=5,
+    scoring="f1",
+    n_jobs=-1
 )
-dt.fit(Xd_train, y_train)
+
+dt_grid.fit(Xd_train, y_train)
+
+print("\nBest Decision Tree Parameters:", dt_grid.best_params_)
+
+dt = dt_grid.best_estimator_
 dt_pred = dt.predict(Xd_test)
+
 
 # -----------------------------
 # STEP 7: Evaluation
