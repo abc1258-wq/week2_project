@@ -1,102 +1,83 @@
+import os
+import pandas as pd
 import matplotlib.pyplot as plt
-from sklearn.metrics import (
-    accuracy_score,
-    precision_score,
-    recall_score,
-    f1_score,
-    confusion_matrix,
-    ConfusionMatrixDisplay
-)
+import seaborn as sns
+from sklearn.metrics import classification_report, confusion_matrix, roc_curve, auc
 
-def evaluate_model(model, X_test, y_test, model_name):
+def evaluate_models(models, X_test, y_test):
 
-    y_pred = model.predict(X_test)
+    os.makedirs("results", exist_ok=True)
 
-    metrics = {
-        "Accuracy": accuracy_score(y_test, y_pred),
-        "Precision": precision_score(y_test, y_pred),
-        "Recall": recall_score(y_test, y_pred),
-        "F1-score": f1_score(y_test, y_pred)
-    }
+    sns.set_style("whitegrid")
+    sns.set_context("talk")
 
-    print(f"\n{model_name} Performance:")
-    for k, v in metrics.items():
-        print(f"{k}: {v:.4f}")
+    results = []
 
-    # Confusion matrix
-    cm = confusion_matrix(y_test, y_pred)
-    disp = ConfusionMatrixDisplay(
-        confusion_matrix=cm,
-        display_labels=["Normal", "Attack"]
-    )
+    for name, model in models.items():
 
-    if model_name == "Random Forest":
-        disp.plot(cmap="Greens")
-    else:
-        disp.plot(cmap="Blues")
+        y_pred = model.predict(X_test)
 
-    plt.title(f"{model_name} - Confusion Matrix")
-    plt.tight_layout()
-    plt.show()
+        report = classification_report(y_test, y_pred, output_dict=True)
 
-    return metrics
+        results.append({
+            "Model": name,
+            "Accuracy": report["accuracy"],
+            "Precision": report["weighted avg"]["precision"],
+            "Recall": report["weighted avg"]["recall"],
+            "F1 Score": report["weighted avg"]["f1-score"]
+        })
+
+        # -----------------------------
+        # Confusion Matrix
+        # -----------------------------
+        cm = confusion_matrix(y_test, y_pred)
+
+        plt.figure(figsize=(6,5))
+        sns.heatmap(cm, annot=True, fmt='d', cmap="Blues")
+        plt.title("Confusion Matrix", fontsize=14, fontweight='bold')
+        plt.tight_layout()
+        plt.savefig("results/confusion_matrix.png")
+        plt.close()
+
+        # -----------------------------
+        # ROC Curve
+        # -----------------------------
+        y_prob = model.predict_proba(X_test)[:, 1]
+        fpr, tpr, _ = roc_curve(y_test, y_prob)
+        roc_auc = auc(fpr, tpr)
+
+        plt.figure(figsize=(6,5))
+        plt.plot(fpr, tpr, color="darkorange", linewidth=3)
+        plt.plot([0,1],[0,1],'--', color="gray")
+        plt.title(f"ROC Curve (AUC = {roc_auc:.4f})", fontsize=14)
+        plt.tight_layout()
+        plt.savefig("results/roc_curve.png")
+        plt.close()
 
 
-def compare_models(lr_metrics, rf_metrics):
 
-    models = ["Logistic Regression", "Random Forest"]
-    f1_scores = [
-        lr_metrics["F1-score"],
-        rf_metrics["F1-score"]
-    ]
-    accuracies = [
-        lr_metrics["Accuracy"],
-        rf_metrics["Accuracy"]
-    ]
+        # -----------------------------
+        # Feature Importance (FIXED)
+        # -----------------------------
+        importances = model.feature_importances_
 
-    x = range(len(models))
+        feature_importance_df = pd.DataFrame({
+            "Feature": X_test.columns,
+            "Importance": importances
+        }).sort_values(by="Importance", ascending=False).head(20)
 
-    plt.figure(figsize=(7,5))
-
-    # Bars for F1-score
-    plt.bar(
-        x,
-        f1_scores,
-        color=["#FF7F0E", "#1F77B4"],
-        alpha=0.85,
-        label="F1-score"
-    )
-
-    # Points for Accuracy
-    plt.scatter(
-        x,
-        accuracies,
-        color="black",
-        s=80,
-        zorder=3,
-        label="Accuracy"
-    )
-
-    # Add accuracy value labels (4 decimal places, exact)
-    for i, acc in enumerate(accuracies):
-        plt.text(
-            i,
-            acc - 0.03,
-            f"{acc:.4f}",
-            ha="center",
-            va="top",
-            fontsize=10,
-            fontweight="bold"
+        plt.figure(figsize=(10,8))
+        sns.barplot(
+            data=feature_importance_df,
+            x="Importance",
+            y="Feature",
+            hue="Feature",
+            legend=False,
+            palette="viridis"
         )
+        plt.title("Top 20 Feature Importance", fontsize=16, fontweight='bold')
+        plt.tight_layout()
+        plt.savefig("results/feature_importance.png")
+        plt.close()
 
-    plt.xticks(x, models)
-    plt.ylabel("Score")
-
-    # IMPORTANT: limit y-axis slightly above 1
-    plt.ylim(0, 1.01)
-
-    plt.title("Model Comparison: F1-score (bars) vs Accuracy (points)")
-    plt.legend()
-    plt.tight_layout()
-    plt.show()
-
+    return pd.DataFrame(results)

@@ -13,7 +13,7 @@ print("DATASET 2: UNSW-NB15 – Attack Severity Classification")
 # -----------------------------
 # STEP 1: Load dataset
 # -----------------------------
-df = pd.read_csv("UNSW-NB15_1.csv")
+df = pd.read_csv("../UNSW-NB15_1.csv")
 print("\nDataset Shape:", df.shape)
 
 # -----------------------------
@@ -83,7 +83,7 @@ svm.fit(X_train_scaled, y_train)
 svm_pred = svm.predict(X_test_scaled)
 
 # -----------------------------
-# MODEL 2: Random Forest (regularized)
+# MODEL 2: Random Forest
 # -----------------------------
 rf = RandomForestClassifier(
     n_estimators=150,
