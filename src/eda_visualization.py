@@ -22,14 +22,6 @@ def plot_eda(df, data_transformed):
 
     print("Generating Ultra Advanced Visualizations...")
 
-
-
-
-
-
-
-
-
     #  PCA 2D Visualization
     pca = PCA(n_components=2)
     pca_result = pca.fit_transform(numeric_df.sample(5000))
@@ -43,10 +35,6 @@ def plot_eda(df, data_transformed):
     plt.tight_layout()
     plt.savefig("results/pca_plot.png")
     plt.close()
-
-
-
-
 
     #  Rolling Mean Trend
     rolling = numeric_df.iloc[:,0].rolling(window=50).mean()
@@ -111,7 +99,7 @@ def plot_eda(df, data_transformed):
 
         metrics = ["Accuracy", "Precision", "Recall", "F1 Score"]
 
-        # 1️⃣ Grouped Bar Comparison
+        # Grouped Bar Comparison
         melted = results_df.melt(id_vars="Model",
                                  value_vars=metrics,
                                  var_name="Metric",

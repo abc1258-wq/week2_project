@@ -38,7 +38,6 @@ def evaluate_models(models, X_test, y_test):
         plt.tight_layout()
         plt.savefig("results/confusion_matrix.png")
         plt.close()
-
         # -----------------------------
         # ROC Curve
         # -----------------------------

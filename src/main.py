@@ -58,5 +58,4 @@ results = evaluate_models(models, X_test, y_test)
 plot_model_comparison(results)
 
 print(results)
-
 print("COMPLETED SUCCESSFULLY")
